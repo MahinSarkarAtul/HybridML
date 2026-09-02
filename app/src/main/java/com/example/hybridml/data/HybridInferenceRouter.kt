@@ -14,19 +14,21 @@ class HybridInferenceRouter @Inject constructor(
     private val cloudEngine: CloudInferenceEngine
 ) : InferenceEngine {
 
-    private val confidenceThreshold = 0.75f
+    @Volatile
+    var confidenceThreshold: Float = 0.75f
 
     override suspend fun runInference(input: ModelInput): Result<PredictionResult> {
+        val activeThreshold = input.metadata["confidence_threshold"]?.toFloatOrNull() ?: confidenceThreshold
         val localResult = localEngine.runInference(input)
 
         if (localResult.isSuccess) {
             val result = localResult.getOrThrow()
             Log.d(TAG, "Local inference succeeded! Max Confidence: ${result.confidence}")
-            if (result.confidence >= confidenceThreshold) {
+            if (result.confidence >= activeThreshold) {
                 Log.d(TAG, "Routing decision: LOCAL_ON_DEVICE accepted.")
                 return localResult
             }
-            Log.d(TAG, "Local confidence ${result.confidence} < $confidenceThreshold. Falling back to Cloud...")
+            Log.d(TAG, "Local confidence ${result.confidence} < $activeThreshold. Falling back to Cloud...")
         } else {
             val error = localResult.exceptionOrNull()
             Log.e(TAG, "Local ONNX inference failed with error: ${error?.message}", error)
@@ -46,7 +48,7 @@ class HybridInferenceRouter @Inject constructor(
         } else {
             Log.w(TAG, "Cloud escalation failed, falling back to local result")
             if (localResult.isSuccess) {
-                localResult
+                Result.success(localResult.getOrThrow().copy(isFallback = true))
             } else {
                 cloudResult
             }

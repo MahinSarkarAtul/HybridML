@@ -29,7 +29,8 @@ data class PredictionResult(
     val outputScores: FloatArray,
     val executionLatencyMs: Long,
     val source: ExecutionEngineSource,
-    val confidence: Float
+    val confidence: Float,
+    val isFallback: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -38,7 +39,8 @@ data class PredictionResult(
         return outputScores.contentEquals(other.outputScores) &&
                 executionLatencyMs == other.executionLatencyMs &&
                 source == other.source &&
-                confidence == other.confidence
+                confidence == other.confidence &&
+                isFallback == other.isFallback
     }
 
     override fun hashCode(): Int {
@@ -46,6 +48,7 @@ data class PredictionResult(
         result = 31 * result + executionLatencyMs.hashCode()
         result = 31 * result + source.hashCode()
         result = 31 * result + confidence.hashCode()
+        result = 31 * result + isFallback.hashCode()
         return result
     }
 }
