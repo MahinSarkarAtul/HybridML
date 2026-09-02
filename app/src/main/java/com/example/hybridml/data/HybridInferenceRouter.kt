@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.hybridml.domain.InferenceEngine
 import com.example.hybridml.domain.ModelInput
 import com.example.hybridml.domain.PredictionResult
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,23 +19,38 @@ class HybridInferenceRouter @Inject constructor(
     override suspend fun runInference(input: ModelInput): Result<PredictionResult> {
         val localResult = localEngine.runInference(input)
 
-        return localResult.fold(
-            onSuccess = { result ->
-                Log.d("HybridRouter", "Local inference succeeded! Max Confidence: ${result.confidence}")
-                if (result.confidence >= confidenceThreshold) {
-                    Log.d("HybridRouter", "Routing decision: LOCAL_ON_DEVICE accepted.")
-                    Result.success(result)
-                } else {
-                    Log.d("HybridRouter", "Local confidence ${result.confidence} < $confidenceThreshold. Falling back to Cloud...")
-                    cloudEngine.runInference(input)
-                }
-            },
-            onFailure = { error ->
-                Log.e("HybridRouter", "Local ONNX inference failed with error: ${error.message}", error)
-                Log.d("HybridRouter", "Routing decision: CLOUD fallback due to local failure.")
-                cloudEngine.runInference(input)
+        if (localResult.isSuccess) {
+            val result = localResult.getOrThrow()
+            Log.d(TAG, "Local inference succeeded! Max Confidence: ${result.confidence}")
+            if (result.confidence >= confidenceThreshold) {
+                Log.d(TAG, "Routing decision: LOCAL_ON_DEVICE accepted.")
+                return localResult
             }
-        )
+            Log.d(TAG, "Local confidence ${result.confidence} < $confidenceThreshold. Falling back to Cloud...")
+        } else {
+            val error = localResult.exceptionOrNull()
+            Log.e(TAG, "Local ONNX inference failed with error: ${error?.message}", error)
+            Log.d(TAG, "Routing decision: CLOUD fallback due to local failure.")
+        }
+
+        val cloudResult = try {
+            cloudEngine.runInference(input)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+
+        return if (cloudResult.isSuccess) {
+            cloudResult
+        } else {
+            Log.w(TAG, "Cloud escalation failed, falling back to local result")
+            if (localResult.isSuccess) {
+                localResult
+            } else {
+                cloudResult
+            }
+        }
     }
 
     override suspend fun warmUp(): Result<Unit> = localEngine.warmUp()
@@ -42,5 +58,9 @@ class HybridInferenceRouter @Inject constructor(
     override fun release() {
         localEngine.release()
         cloudEngine.release()
+    }
+
+    companion object {
+        private const val TAG = "HybridInferenceRouter"
     }
 }
