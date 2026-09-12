@@ -1,5 +1,7 @@
 package com.example.hybridml.domain
 
+import com.example.hybridml.domain.model.InferenceTrace
+
 /**
  * Encapsulates input payload for ML execution.
  */
@@ -30,7 +32,8 @@ data class PredictionResult(
     val executionLatencyMs: Long,
     val source: ExecutionEngineSource,
     val confidence: Float,
-    val isFallback: Boolean = false
+    val isFallback: Boolean = false,
+    val trace: InferenceTrace? = null
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -40,7 +43,8 @@ data class PredictionResult(
                 executionLatencyMs == other.executionLatencyMs &&
                 source == other.source &&
                 confidence == other.confidence &&
-                isFallback == other.isFallback
+                isFallback == other.isFallback &&
+                trace == other.trace
     }
 
     override fun hashCode(): Int {
@@ -49,6 +53,7 @@ data class PredictionResult(
         result = 31 * result + source.hashCode()
         result = 31 * result + confidence.hashCode()
         result = 31 * result + isFallback.hashCode()
+        result = 31 * result + (trace?.hashCode() ?: 0)
         return result
     }
 }

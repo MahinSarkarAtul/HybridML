@@ -1,0 +1,98 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "84b1baeda782a11f00ec75b944af0b04",
+    "entities": [
+      {
+        "tableName": "benchmarks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `modelVersion` TEXT NOT NULL, `executionSource` TEXT NOT NULL, `totalLatencyMs` INTEGER NOT NULL, `localLatencyMs` INTEGER, `cloudLatencyMs` INTEGER, `localConfidence` REAL, `finalConfidence` REAL NOT NULL, `routingThreshold` REAL NOT NULL, `cloudAttempted` INTEGER NOT NULL, `escalationReason` TEXT, `fallbackReason` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelVersion",
+            "columnName": "modelVersion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "executionSource",
+            "columnName": "executionSource",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalLatencyMs",
+            "columnName": "totalLatencyMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localLatencyMs",
+            "columnName": "localLatencyMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cloudLatencyMs",
+            "columnName": "cloudLatencyMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "localConfidence",
+            "columnName": "localConfidence",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "finalConfidence",
+            "columnName": "finalConfidence",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "routingThreshold",
+            "columnName": "routingThreshold",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cloudAttempted",
+            "columnName": "cloudAttempted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "escalationReason",
+            "columnName": "escalationReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fallbackReason",
+            "columnName": "fallbackReason",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '84b1baeda782a11f00ec75b944af0b04')"
+    ]
+  }
+}
