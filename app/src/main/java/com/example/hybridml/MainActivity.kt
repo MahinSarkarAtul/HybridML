@@ -46,6 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hybridml.domain.ExecutionEngineSource
 import com.example.hybridml.presentation.InferenceViewModel
 import com.example.hybridml.presentation.UiState
+import com.example.hybridml.presentation.components.AnalyticsDashboard
 import com.example.hybridml.ui.theme.HybridMLTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
@@ -83,6 +84,7 @@ fun InferenceScreen(
     val uiState by viewModel.uiState.collectAsState()
     val threshold by viewModel.confidenceThreshold.collectAsState()
     val recentBenchmarks by viewModel.recentBenchmarks.collectAsState()
+    val analyticsUiState by viewModel.analyticsUiState.collectAsState()
 
     LazyColumn(
         modifier = modifier
@@ -276,6 +278,11 @@ fun InferenceScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+        }
+
+        item {
+            // Observability Analytics Dashboard
+            AnalyticsDashboard(uiState = analyticsUiState)
         }
 
         item {
