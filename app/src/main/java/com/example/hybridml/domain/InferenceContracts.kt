@@ -33,8 +33,12 @@ data class PredictionResult(
     val source: ExecutionEngineSource,
     val confidence: Float,
     val isFallback: Boolean = false,
-    val trace: InferenceTrace? = null
+    val trace: InferenceTrace? = null,
+    val classId: Int? = null,
+    val className: String? = null
 ) {
+    val latencyMs: Long get() = executionLatencyMs
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -44,7 +48,9 @@ data class PredictionResult(
                 source == other.source &&
                 confidence == other.confidence &&
                 isFallback == other.isFallback &&
-                trace == other.trace
+                trace == other.trace &&
+                classId == other.classId &&
+                className == other.className
     }
 
     override fun hashCode(): Int {
@@ -54,6 +60,8 @@ data class PredictionResult(
         result = 31 * result + confidence.hashCode()
         result = 31 * result + isFallback.hashCode()
         result = 31 * result + (trace?.hashCode() ?: 0)
+        result = 31 * result + (classId?.hashCode() ?: 0)
+        result = 31 * result + (className?.hashCode() ?: 0)
         return result
     }
 }

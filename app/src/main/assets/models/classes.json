@@ -1,0 +1,56 @@
+{
+  "dataset": "imagewoof2-320",
+  "numClasses": 10,
+  "classes": [
+    {
+      "classId": 0,
+      "wnid": "n02086240",
+      "className": "Shih-Tzu"
+    },
+    {
+      "classId": 1,
+      "wnid": "n02087394",
+      "className": "Rhodesian ridgeback"
+    },
+    {
+      "classId": 2,
+      "wnid": "n02088364",
+      "className": "Beagle"
+    },
+    {
+      "classId": 3,
+      "wnid": "n02089973",
+      "className": "English foxhound"
+    },
+    {
+      "classId": 4,
+      "wnid": "n02093754",
+      "className": "Australian terrier"
+    },
+    {
+      "classId": 5,
+      "wnid": "n02096294",
+      "className": "Border terrier"
+    },
+    {
+      "classId": 6,
+      "wnid": "n02099601",
+      "className": "Golden retriever"
+    },
+    {
+      "classId": 7,
+      "wnid": "n02105641",
+      "className": "Old English sheepdog"
+    },
+    {
+      "classId": 8,
+      "wnid": "n02111889",
+      "className": "Samoyed"
+    },
+    {
+      "classId": 9,
+      "wnid": "n02115641",
+      "className": "Dingo"
+    }
+  ]
+}
