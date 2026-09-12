@@ -1,7 +1,9 @@
 package com.example.hybridml.data
 
+import android.graphics.Bitmap
 import android.os.SystemClock
 import android.util.Log
+import com.example.hybridml.data.network.CloudInferenceClient
 import com.example.hybridml.domain.ExecutionEngineSource
 import com.example.hybridml.domain.InferenceEngine
 import com.example.hybridml.domain.ModelInput
@@ -10,6 +12,7 @@ import com.example.hybridml.domain.model.EscalationReason
 import com.example.hybridml.domain.model.FallbackReason
 import com.example.hybridml.domain.model.InferenceTrace
 import kotlinx.coroutines.CancellationException
+import java.io.ByteArrayOutputStream
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -19,11 +22,116 @@ import javax.inject.Singleton
 @Singleton
 class HybridInferenceRouter @Inject constructor(
     private val localEngine: OnDeviceInferenceEngine,
-    private val cloudEngine: CloudInferenceEngine
+    private val cloudEngine: CloudInferenceEngine,
+    private val cloudClient: CloudInferenceClient
 ) : InferenceEngine {
+
+    /**
+     * Secondary constructor for direct testing/customization.
+     */
+    constructor(
+        localEngine: OnDeviceInferenceEngine,
+        cloudClient: CloudInferenceClient
+    ) : this(
+        localEngine = localEngine,
+        cloudEngine = CloudInferenceEngine(cloudClient.apiService),
+        cloudClient = cloudClient
+    )
 
     @Volatile
     var confidenceThreshold: Float = 0.75f
+
+    /**
+     * Real vision routing pipeline for camera/asset [Bitmap]:
+     * 1. Executes local inference once via [OnDeviceInferenceEngine.runInference(bitmap)].
+     * 2. If local confidence >= confidenceThreshold: returns directly as LOCAL.
+     * 3. Otherwise: encodes bitmap to JPEG byte array and calls [CloudInferenceClient.predictImage].
+     * 4. If cloud succeeds: returns cloud prediction as CLOUD.
+     * 5. If cloud fails: gracefully falls back to the already-computed local result without re-execution.
+     */
+    suspend fun runInference(bitmap: Bitmap): Result<PredictionResult> {
+        val startTime = SystemClock.elapsedRealtime()
+        val activeThreshold = confidenceThreshold
+
+        // Step 1: Execute local inference once
+        val localResult = localEngine.runInference(bitmap)
+        val localPrediction = localResult.getOrNull()
+        val localLatency = localPrediction?.executionLatencyMs
+        val localConfidence = localPrediction?.confidence
+
+        // Step 2: If local prediction meets or exceeds threshold, accept local execution
+        if (localResult.isSuccess && localPrediction != null && localPrediction.confidence >= activeThreshold) {
+            Log.d(TAG, "Routing decision: LOCAL accepted (confidence ${localPrediction.confidence} >= $activeThreshold)")
+            val totalLatency = SystemClock.elapsedRealtime() - startTime
+            val trace = InferenceTrace(
+                localLatencyMs = localLatency,
+                cloudLatencyMs = null,
+                totalLatencyMs = totalLatency,
+                localConfidence = localConfidence,
+                finalConfidence = localPrediction.confidence,
+                routingThreshold = activeThreshold,
+                executionSource = ExecutionEngineSource.LOCAL_ON_DEVICE,
+                cloudAttempted = false,
+                escalationReason = null,
+                fallbackReason = null
+            )
+            return Result.success(localPrediction.copy(trace = trace))
+        }
+
+        // Step 3: Cloud escalation path
+        Log.d(TAG, "Routing decision: CLOUD escalation (localConf: $localConfidence < threshold: $activeThreshold)")
+        val escalationReason = EscalationReason.LOW_CONFIDENCE
+
+        val jpegBytes = bitmapToJpegBytes(bitmap)
+        val cloudStart = SystemClock.elapsedRealtime()
+        val cloudResult = try {
+            cloudClient.predictImage(jpegBytes)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            Result.failure(e)
+        }
+        val cloudLatency = SystemClock.elapsedRealtime() - cloudStart
+
+        return if (cloudResult.isSuccess) {
+            val cloudPrediction = cloudResult.getOrThrow()
+            val totalLatency = SystemClock.elapsedRealtime() - startTime
+            val trace = InferenceTrace(
+                localLatencyMs = localLatency,
+                cloudLatencyMs = cloudPrediction.executionLatencyMs.takeIf { it > 0 } ?: cloudLatency,
+                totalLatencyMs = totalLatency,
+                localConfidence = localConfidence,
+                finalConfidence = cloudPrediction.confidence,
+                routingThreshold = activeThreshold,
+                executionSource = ExecutionEngineSource.REMOTE_GPU_CLOUD,
+                cloudAttempted = true,
+                escalationReason = escalationReason,
+                fallbackReason = null
+            )
+            Result.success(cloudPrediction.copy(trace = trace))
+        } else {
+            Log.w(TAG, "Cloud escalation failed (${cloudResult.exceptionOrNull()?.message}), falling back to local result")
+            val fallbackReason = mapThrowableToFallbackReason(cloudResult.exceptionOrNull())
+            if (localResult.isSuccess && localPrediction != null) {
+                val totalLatency = SystemClock.elapsedRealtime() - startTime
+                val trace = InferenceTrace(
+                    localLatencyMs = localLatency,
+                    cloudLatencyMs = cloudLatency,
+                    totalLatencyMs = totalLatency,
+                    localConfidence = localConfidence,
+                    finalConfidence = localPrediction.confidence,
+                    routingThreshold = activeThreshold,
+                    executionSource = ExecutionEngineSource.LOCAL_ON_DEVICE,
+                    cloudAttempted = true,
+                    escalationReason = escalationReason,
+                    fallbackReason = fallbackReason
+                )
+                Result.success(localPrediction.copy(isFallback = true, trace = trace))
+            } else {
+                cloudResult
+            }
+        }
+    }
 
     override suspend fun runInference(input: ModelInput): Result<PredictionResult> {
         val startTime = SystemClock.elapsedRealtime()
@@ -114,6 +222,12 @@ class HybridInferenceRouter @Inject constructor(
                 cloudResult
             }
         }
+    }
+
+    private fun bitmapToJpegBytes(bitmap: Bitmap, quality: Int = 90): ByteArray {
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+        return outputStream.toByteArray()
     }
 
     private fun mapThrowableToFallbackReason(throwable: Throwable?): FallbackReason {

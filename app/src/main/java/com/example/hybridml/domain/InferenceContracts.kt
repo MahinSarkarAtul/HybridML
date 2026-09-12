@@ -38,6 +38,7 @@ data class PredictionResult(
     val className: String? = null
 ) {
     val latencyMs: Long get() = executionLatencyMs
+    val executionSource: ExecutionEngineSource get() = source
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -68,8 +69,16 @@ data class PredictionResult(
 
 enum class ExecutionEngineSource {
     LOCAL_ON_DEVICE,
-    REMOTE_GPU_CLOUD
+    REMOTE_GPU_CLOUD;
+
+    companion object {
+        val LOCAL get() = LOCAL_ON_DEVICE
+        val CLOUD get() = REMOTE_GPU_CLOUD
+        val FALLBACK_LOCAL get() = LOCAL_ON_DEVICE
+    }
 }
+
+typealias ExecutionSource = ExecutionEngineSource
 
 /**
  * Contract implemented by both on-device (ONNX/ExecuTorch) and cloud endpoints.
