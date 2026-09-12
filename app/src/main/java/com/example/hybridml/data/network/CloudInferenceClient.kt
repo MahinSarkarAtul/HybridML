@@ -39,7 +39,9 @@ class CloudInferenceClient @Inject constructor(
                     source = ExecutionEngineSource.REMOTE_GPU_CLOUD,
                     confidence = response.confidence,
                     classId = response.classId,
-                    className = response.className
+                    className = response.className,
+                    cloudModelId = response.modelId,
+                    cloudModelVersion = response.modelVersion
                 )
             )
         } catch (e: Exception) {

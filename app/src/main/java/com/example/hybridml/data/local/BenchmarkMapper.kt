@@ -33,7 +33,16 @@ fun BenchmarkEntity.toDomain(): BenchmarkRecord {
             cloudAttempted = cloudAttempted,
             escalationReason = escalation,
             fallbackReason = fallback
-        )
+        ),
+        edgeModelId = edgeModelId,
+        edgeModelVersion = edgeModelVersion,
+        cloudModelId = cloudModelId,
+        cloudModelVersion = cloudModelVersion,
+        localPredictedClass = localPredictedClass,
+        localPredictedClassId = localPredictedClassId,
+        finalPredictedClass = finalPredictedClass,
+        finalPredictedClassId = finalPredictedClassId,
+        predictionChangedByCloud = predictionChangedByCloud
     )
 }
 
@@ -51,6 +60,15 @@ fun BenchmarkRecord.toEntity(): BenchmarkEntity {
         routingThreshold = trace.routingThreshold,
         cloudAttempted = trace.cloudAttempted,
         escalationReason = trace.escalationReason?.name,
-        fallbackReason = trace.fallbackReason?.name
+        fallbackReason = trace.fallbackReason?.name,
+        edgeModelId = edgeModelId,
+        edgeModelVersion = edgeModelVersion,
+        cloudModelId = cloudModelId,
+        cloudModelVersion = cloudModelVersion,
+        localPredictedClass = localPredictedClass,
+        localPredictedClassId = localPredictedClassId,
+        finalPredictedClass = finalPredictedClass,
+        finalPredictedClassId = finalPredictedClassId,
+        predictionChangedByCloud = predictionChangedByCloud
     )
 }

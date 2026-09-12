@@ -168,4 +168,95 @@ class TelemetryMapperTest {
             assertEquals(reason.name, backToEntity.fallbackReason)
         }
     }
+
+    @Test
+    fun `v2 provenance and prediction metadata roundtrips cleanly`() {
+        val record = BenchmarkRecord(
+            id = 456L,
+            timestamp = 1726158000000L,
+            modelVersion = "v2.0-real",
+            trace = InferenceTrace(
+                localLatencyMs = 28L,
+                cloudLatencyMs = 95L,
+                totalLatencyMs = 125L,
+                localConfidence = 0.55f,
+                finalConfidence = 0.96f,
+                routingThreshold = 0.75f,
+                executionSource = ExecutionEngineSource.REMOTE_GPU_CLOUD,
+                cloudAttempted = true,
+                escalationReason = EscalationReason.LOW_CONFIDENCE,
+                fallbackReason = null
+            ),
+            edgeModelId = "mobilenetv3_small_dynamic_mixed",
+            edgeModelVersion = "m8_locked_v1",
+            cloudModelId = "mobilenet_v3_large",
+            cloudModelVersion = "1.0.0",
+            localPredictedClass = "terrier",
+            localPredictedClassId = 180,
+            finalPredictedClass = "Old English sheepdog",
+            finalPredictedClassId = 7,
+            predictionChangedByCloud = true
+        )
+
+        val entity = record.toEntity()
+        assertEquals("mobilenetv3_small_dynamic_mixed", entity.edgeModelId)
+        assertEquals("m8_locked_v1", entity.edgeModelVersion)
+        assertEquals("mobilenet_v3_large", entity.cloudModelId)
+        assertEquals("1.0.0", entity.cloudModelVersion)
+        assertEquals("terrier", entity.localPredictedClass)
+        assertEquals(180, entity.localPredictedClassId)
+        assertEquals("Old English sheepdog", entity.finalPredictedClass)
+        assertEquals(7, entity.finalPredictedClassId)
+        assertEquals(true, entity.predictionChangedByCloud)
+
+        val roundtrip = entity.toDomain()
+        assertEquals(record.edgeModelId, roundtrip.edgeModelId)
+        assertEquals(record.edgeModelVersion, roundtrip.edgeModelVersion)
+        assertEquals(record.cloudModelId, roundtrip.cloudModelId)
+        assertEquals(record.cloudModelVersion, roundtrip.cloudModelVersion)
+        assertEquals(record.localPredictedClass, roundtrip.localPredictedClass)
+        assertEquals(record.localPredictedClassId, roundtrip.localPredictedClassId)
+        assertEquals(record.finalPredictedClass, roundtrip.finalPredictedClass)
+        assertEquals(record.finalPredictedClassId, roundtrip.finalPredictedClassId)
+        assertEquals(record.predictionChangedByCloud, roundtrip.predictionChangedByCloud)
+    }
+
+    @Test
+    fun `historical v1 null fields map cleanly`() {
+        val legacyEntity = BenchmarkEntity(
+            id = 1L,
+            timestamp = 1000L,
+            modelVersion = "v1.0-tiny",
+            executionSource = "LOCAL_ON_DEVICE",
+            totalLatencyMs = 15L,
+            localLatencyMs = 15L,
+            cloudLatencyMs = null,
+            localConfidence = 0.85f,
+            finalConfidence = 0.85f,
+            routingThreshold = 0.75f,
+            cloudAttempted = false,
+            escalationReason = null,
+            fallbackReason = null,
+            edgeModelId = null,
+            edgeModelVersion = null,
+            cloudModelId = null,
+            cloudModelVersion = null,
+            localPredictedClass = null,
+            localPredictedClassId = null,
+            finalPredictedClass = null,
+            finalPredictedClassId = null,
+            predictionChangedByCloud = null
+        )
+
+        val domain = legacyEntity.toDomain()
+        assertNull(domain.edgeModelId)
+        assertNull(domain.edgeModelVersion)
+        assertNull(domain.cloudModelId)
+        assertNull(domain.cloudModelVersion)
+        assertNull(domain.localPredictedClass)
+        assertNull(domain.localPredictedClassId)
+        assertNull(domain.finalPredictedClass)
+        assertNull(domain.finalPredictedClassId)
+        assertNull(domain.predictionChangedByCloud)
+    }
 }

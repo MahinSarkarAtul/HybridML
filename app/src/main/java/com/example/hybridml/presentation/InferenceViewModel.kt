@@ -121,7 +121,16 @@ class InferenceViewModel @Inject constructor(
                         BenchmarkRecord(
                             timestamp = System.currentTimeMillis(),
                             modelVersion = "v1.0-tiny",
-                            trace = trace
+                            trace = trace,
+                            edgeModelId = result.edgeModelId,
+                            edgeModelVersion = result.edgeModelVersion,
+                            cloudModelId = result.cloudModelId,
+                            cloudModelVersion = result.cloudModelVersion,
+                            localPredictedClass = result.localPredictedClass,
+                            localPredictedClassId = result.localPredictedClassId,
+                            finalPredictedClass = result.finalPredictedClass,
+                            finalPredictedClassId = result.finalPredictedClassId,
+                            predictionChangedByCloud = result.predictionChangedByCloud
                         )
                     )
                 }

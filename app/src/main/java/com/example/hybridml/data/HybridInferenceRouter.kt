@@ -75,7 +75,20 @@ class HybridInferenceRouter @Inject constructor(
                 escalationReason = null,
                 fallbackReason = null
             )
-            return Result.success(localPrediction.copy(trace = trace))
+            return Result.success(
+                localPrediction.copy(
+                    trace = trace,
+                    edgeModelId = "mobilenetv3_small_dynamic_mixed",
+                    edgeModelVersion = "m8_locked_v1",
+                    cloudModelId = null,
+                    cloudModelVersion = null,
+                    localPredictedClass = localPrediction.className,
+                    localPredictedClassId = localPrediction.classId,
+                    finalPredictedClass = localPrediction.className,
+                    finalPredictedClassId = localPrediction.classId,
+                    predictionChangedByCloud = false
+                )
+            )
         }
 
         // Step 3: Cloud escalation path
@@ -108,7 +121,27 @@ class HybridInferenceRouter @Inject constructor(
                 escalationReason = escalationReason,
                 fallbackReason = null
             )
-            Result.success(cloudPrediction.copy(trace = trace))
+            val cloudModelId = cloudPrediction.cloudModelId ?: "mobilenet_v3_large"
+            val cloudModelVersion = cloudPrediction.cloudModelVersion ?: "1.0.0"
+            val changed = if (localPrediction?.classId != null && cloudPrediction.classId != null) {
+                cloudPrediction.classId != localPrediction.classId
+            } else {
+                false
+            }
+            Result.success(
+                cloudPrediction.copy(
+                    trace = trace,
+                    edgeModelId = "mobilenetv3_small_dynamic_mixed",
+                    edgeModelVersion = "m8_locked_v1",
+                    cloudModelId = cloudModelId,
+                    cloudModelVersion = cloudModelVersion,
+                    localPredictedClass = localPrediction?.className,
+                    localPredictedClassId = localPrediction?.classId,
+                    finalPredictedClass = cloudPrediction.className,
+                    finalPredictedClassId = cloudPrediction.classId,
+                    predictionChangedByCloud = changed
+                )
+            )
         } else {
             Log.w(TAG, "Cloud escalation failed (${cloudResult.exceptionOrNull()?.message}), falling back to local result")
             val fallbackReason = mapThrowableToFallbackReason(cloudResult.exceptionOrNull())
@@ -126,7 +159,21 @@ class HybridInferenceRouter @Inject constructor(
                     escalationReason = escalationReason,
                     fallbackReason = fallbackReason
                 )
-                Result.success(localPrediction.copy(isFallback = true, trace = trace))
+                Result.success(
+                    localPrediction.copy(
+                        isFallback = true,
+                        trace = trace,
+                        edgeModelId = "mobilenetv3_small_dynamic_mixed",
+                        edgeModelVersion = "m8_locked_v1",
+                        cloudModelId = null,
+                        cloudModelVersion = null,
+                        localPredictedClass = localPrediction.className,
+                        localPredictedClassId = localPrediction.classId,
+                        finalPredictedClass = localPrediction.className,
+                        finalPredictedClassId = localPrediction.classId,
+                        predictionChangedByCloud = false
+                    )
+                )
             } else {
                 cloudResult
             }

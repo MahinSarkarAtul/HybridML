@@ -1,0 +1,143 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "be002be14ec28dfbed75ac68d952cbe4",
+    "entities": [
+      {
+        "tableName": "benchmarks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestamp` INTEGER NOT NULL, `modelVersion` TEXT NOT NULL, `executionSource` TEXT NOT NULL, `totalLatencyMs` INTEGER NOT NULL, `localLatencyMs` INTEGER, `cloudLatencyMs` INTEGER, `localConfidence` REAL, `finalConfidence` REAL NOT NULL, `routingThreshold` REAL NOT NULL, `cloudAttempted` INTEGER NOT NULL, `escalationReason` TEXT, `fallbackReason` TEXT, `edgeModelId` TEXT, `edgeModelVersion` TEXT, `cloudModelId` TEXT, `cloudModelVersion` TEXT, `localPredictedClass` TEXT, `localPredictedClassId` INTEGER, `finalPredictedClass` TEXT, `finalPredictedClassId` INTEGER, `predictionChangedByCloud` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestamp",
+            "columnName": "timestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelVersion",
+            "columnName": "modelVersion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "executionSource",
+            "columnName": "executionSource",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalLatencyMs",
+            "columnName": "totalLatencyMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localLatencyMs",
+            "columnName": "localLatencyMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "cloudLatencyMs",
+            "columnName": "cloudLatencyMs",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "localConfidence",
+            "columnName": "localConfidence",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "finalConfidence",
+            "columnName": "finalConfidence",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "routingThreshold",
+            "columnName": "routingThreshold",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cloudAttempted",
+            "columnName": "cloudAttempted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "escalationReason",
+            "columnName": "escalationReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fallbackReason",
+            "columnName": "fallbackReason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "edgeModelId",
+            "columnName": "edgeModelId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "edgeModelVersion",
+            "columnName": "edgeModelVersion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cloudModelId",
+            "columnName": "cloudModelId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cloudModelVersion",
+            "columnName": "cloudModelVersion",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "localPredictedClass",
+            "columnName": "localPredictedClass",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "localPredictedClassId",
+            "columnName": "localPredictedClassId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "finalPredictedClass",
+            "columnName": "finalPredictedClass",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "finalPredictedClassId",
+            "columnName": "finalPredictedClassId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "predictionChangedByCloud",
+            "columnName": "predictionChangedByCloud",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'be002be14ec28dfbed75ac68d952cbe4')"
+    ]
+  }
+}

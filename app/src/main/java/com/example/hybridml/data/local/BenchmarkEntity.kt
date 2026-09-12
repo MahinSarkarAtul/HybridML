@@ -18,5 +18,16 @@ data class BenchmarkEntity(
     val routingThreshold: Float,
     val cloudAttempted: Boolean,
     val escalationReason: String?,
-    val fallbackReason: String?
+    val fallbackReason: String?,
+
+    // V2 Provenance and Prediction Metadata
+    val edgeModelId: String? = null,
+    val edgeModelVersion: String? = null,
+    val cloudModelId: String? = null,
+    val cloudModelVersion: String? = null,
+    val localPredictedClass: String? = null,
+    val localPredictedClassId: Int? = null,
+    val finalPredictedClass: String? = null,
+    val finalPredictedClassId: Int? = null,
+    val predictionChangedByCloud: Boolean? = null
 )
